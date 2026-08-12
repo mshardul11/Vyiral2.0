@@ -9,3 +9,4 @@ data/
 .vite/
 coverage/
 resume-check.pdf
+*.tsbuildinfo
