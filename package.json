@@ -1,0 +1,20 @@
+{
+  "name": "vyiral-resume",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "workspaces": [
+    "packages/shared",
+    "packages/server",
+    "packages/web"
+  ],
+  "scripts": {
+    "dev": "npm run dev --workspace=@resume/server & npm run dev --workspace=@resume/web",
+    "build": "npm run build --workspace=@resume/shared && npm run build --workspace=@resume/server && npm run build --workspace=@resume/web",
+    "typecheck": "npm run typecheck --workspaces --if-present",
+    "test": "npm run test --workspaces --if-present"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}
