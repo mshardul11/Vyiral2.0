@@ -8,12 +8,15 @@
     "build": "tsc -b && vite build",
     "preview": "vite preview",
     "typecheck": "tsc -b --noEmit",
-    "check:pdf": "tsx src/dev/render-check.tsx ./resume-check.pdf && tsx src/dev/pdf-text.ts ./resume-check.pdf"
+    "check:pdf": "tsx src/dev/render-check.tsx ./resume-check.pdf && tsx src/dev/pdf-text.ts ./resume-check.pdf",
+    "check:docx": "tsx src/dev/docx-check.ts ./resume-check.docx",
+    "check": "npm run check:pdf && npm run check:docx"
   },
   "dependencies": {
     "@react-pdf/renderer": "^4.1.6",
     "@resume/shared": "*",
     "docx": "^9.1.1",
+    "immer": "^10.1.1",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
     "react-router-dom": "^7.1.1",
