@@ -3,14 +3,16 @@ import type { MessageCreateParams } from "@anthropic-ai/sdk/resources/messages";
 import {
   ResumeSchema,
   RewriteResultSchema,
+  TailorResultSchema,
   type IntakeAnswers,
   type Resume,
   type RewriteRequest,
   type RewriteResult,
+  type TailorResult,
 } from "@resume/shared";
 import { MODEL } from "../config.js";
 import { anthropic } from "./client.js";
-import { CRAFT, GENERATE, PARSE, REWRITE } from "./prompts.js";
+import { CRAFT, GENERATE, PARSE, REWRITE, TAILOR } from "./prompts.js";
 
 /**
  * Every model call in the app.
@@ -252,6 +254,40 @@ export async function parseResume(source: UploadSource): Promise<Completed<Resum
       effort: "low" satisfies Effort,
     },
     messages: [{ role: "user", content }],
+  });
+
+  assertUsable(response);
+  const parsed = response.parsed_output;
+  if (!parsed) throw new Error("The model returned no usable output.");
+  return { data: parsed, usage: usageOf(response) };
+}
+
+// --- Tailor to a job description ----------------------------------------------
+
+export async function tailorResume(
+  resume: Resume,
+  jobDescription: string,
+): Promise<Completed<TailorResult>> {
+  const response = await anthropic().messages.parse({
+    model: MODEL,
+    max_tokens: 16000,
+    system: system(TAILOR),
+    output_config: {
+      format: zodOutputFormat(TailorResultSchema),
+      // The one operation with a genuinely hard judgment call in it: deciding what
+      // to emphasise, reorder, and reword against a posting — and where to leave a
+      // gap standing rather than paper over it.
+      effort: "high" satisfies Effort,
+    },
+    messages: [
+      {
+        role: "user",
+        content: [
+          tag("current_resume", JSON.stringify(resume, null, 2)),
+          tag("job_description", jobDescription),
+        ].join("\n\n"),
+      },
+    ],
   });
 
   assertUsable(response);

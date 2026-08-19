@@ -14,6 +14,7 @@ import { downloadDocx } from "../export/docx";
 import { fixtureResume } from "../resume/fixture";
 import { ImportDialog } from "../components/ImportDialog";
 import { IntakeWizard } from "../components/IntakeWizard";
+import { TailorDialog } from "../components/TailorDialog";
 
 export function Editor() {
   const hydrated = useHydrated();
@@ -28,7 +29,7 @@ export function Editor() {
 
   const [exporting, setExporting] = useState<null | "pdf" | "docx">(null);
   const [exportError, setExportError] = useState<string | null>(null);
-  const [dialog, setDialog] = useState<null | "import" | "wizard">(null);
+  const [dialog, setDialog] = useState<null | "import" | "wizard" | "tailor">(null);
 
   const problems = resumeReadiness(resume);
   const blank = isBlankResume(resume);
@@ -90,6 +91,9 @@ export function Editor() {
         <div className="app-header__group">
           <Button onClick={() => setDialog("import")}>Import resume</Button>
           <Button onClick={() => setDialog("wizard")}>Guided questions</Button>
+          <Button onClick={() => setDialog("tailor")} disabled={blank}>
+            Tailor to a job
+          </Button>
         </div>
 
         <div className="app-header__spacer" />
@@ -187,6 +191,19 @@ export function Editor() {
         <IntakeWizard
           hasExistingContent={!blank}
           onGenerated={adopt}
+          onClose={() => setDialog(null)}
+        />
+      ) : null}
+
+      {dialog === "tailor" ? (
+        <TailorDialog
+          resume={resume}
+          // Unlike import and generate, tailoring keeps undo history: it edits the
+          // document the user already had, so undoing back past it is meaningful.
+          onApply={(next) => {
+            replace(next);
+            setDialog(null);
+          }}
           onClose={() => setDialog(null)}
         />
       ) : null}

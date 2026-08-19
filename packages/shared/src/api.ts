@@ -52,9 +52,23 @@ export const DOCX_MIME = "application/vnd.openxmlformats-officedocument.wordproc
 export const ChangeNoteSchema = z.object({
   section: z
     .string()
-    .describe("Where the change lands, e.g. 'Summary' or 'Experience — Acme Corp'."),
-  before: z.string().describe("The original text. Empty string if this adds something new."),
-  after: z.string().describe("The replacement text. Empty string if this removes something."),
+    .describe("Human-readable location, e.g. 'Summary' or 'Experience — Acme Corp'."),
+  /**
+   * The `path` is what makes per-change accept/reject exact: applying a subset is a
+   * copy of the tailored value at each accepted path, rather than trying to locate
+   * `before` by string matching.
+   */
+  path: z
+    .string()
+    .describe(
+      "Dot-separated path to the changed value in the resume object, using numeric " +
+        "indices for arrays. Examples: 'summary', 'basics.headline', " +
+        "'experience.0.highlights.2', 'skills.1.items', 'experience'. Point at the " +
+        "smallest value that fully contains the change — use the array path when " +
+        "items were reordered, added, or removed.",
+    ),
+  before: z.string().describe("The original text, for display. Empty if this adds something."),
+  after: z.string().describe("The new text, for display. Empty if this removes something."),
   rationale: z
     .string()
     .describe("One sentence tying the change to something specific in the job description."),

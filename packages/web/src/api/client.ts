@@ -5,6 +5,8 @@ import type {
   RewriteKind,
   RewriteRequest,
   RewriteResult,
+  TailorRequest,
+  TailorResult,
 } from "@resume/shared";
 
 /**
@@ -74,6 +76,15 @@ export function rewrite(
     instruction: request.instruction ?? "",
   };
   return post<RewriteResult>("/resume/rewrite", body, signal);
+}
+
+export function tailorResume(
+  resume: Resume,
+  jobDescription: string,
+  signal?: AbortSignal,
+): Promise<TailorResult> {
+  const body: TailorRequest = { resume, jobDescription };
+  return post<TailorResult>("/resume/tailor", body, signal);
 }
 
 export function generateResume(

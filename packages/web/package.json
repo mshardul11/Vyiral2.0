@@ -11,7 +11,8 @@
     "check:pdf": "tsx src/dev/render-check.tsx ./resume-check.pdf && tsx src/dev/pdf-text.ts ./resume-check.pdf",
     "check:docx": "tsx src/dev/docx-check.ts ./resume-check.docx",
     "check": "npm run check:pdf && npm run check:docx",
-    "check:leading": "tsx src/dev/leading-sweep.tsx ./leading-sweep.pdf"
+    "check:leading": "tsx src/dev/leading-sweep.tsx ./leading-sweep.pdf",
+    "test": "vitest run"
   },
   "dependencies": {
     "@react-pdf/renderer": "^4.1.6",
@@ -32,6 +33,7 @@
     "@vitejs/plugin-react": "^4.3.4",
     "tsx": "^4.19.2",
     "typescript": "^5.7.3",
-    "vite": "^6.0.7"
+    "vite": "^6.0.7",
+    "vitest": "^3.0.5"
   }
 }

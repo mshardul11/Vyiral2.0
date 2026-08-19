@@ -6,10 +6,16 @@ import {
   MAX_UPLOAD_BYTES,
   PDF_MIME,
   RewriteRequestSchema,
+  TailorRequestSchema,
 } from "@resume/shared";
 import mammoth from "mammoth";
 import { requireApiKey } from "../claude/client.js";
-import { generateResume, parseResume, rewriteSection } from "../claude/operations.js";
+import {
+  generateResume,
+  parseResume,
+  rewriteSection,
+  tailorResume,
+} from "../claude/operations.js";
 import { respondWithError } from "./errors.js";
 
 export const resumeRoutes = new Hono();
@@ -118,6 +124,30 @@ resumeRoutes.post("/parse", async (c) => {
     return respondWithError(c, error);
   }
 });
+
+/**
+ * Rewrite a resume against a job posting, returning the tailored version plus a
+ * change note per edit so the client can present it for review rather than
+ * overwriting silently.
+ */
+resumeRoutes.post(
+  "/tailor",
+  zValidator("json", TailorRequestSchema, (result, c) => {
+    if (!result.success) return c.json({ error: "That request was not valid." }, 400);
+    return undefined;
+  }),
+  async (c) => {
+    try {
+      requireApiKey();
+      const { resume, jobDescription } = c.req.valid("json");
+      const { data, usage } = await tailorResume(resume, jobDescription);
+      console.log("tailor", { ...usage, changes: data.changes.length });
+      return c.json(data);
+    } catch (error) {
+      return respondWithError(c, error);
+    }
+  },
+);
 
 /** PDFs start with "%PDF-"; DOCX is a zip, so it starts with "PK". */
 function detectFileKind(bytes: Buffer, file: File): "pdf" | "docx" | null {
