@@ -1,6 +1,6 @@
 import { useState } from "react";
-import { resumeReadiness } from "@resume/shared";
-import { useResumeStore, useTemporalStore } from "../state/resume";
+import { isBlankResume, resumeReadiness, type Resume } from "@resume/shared";
+import { clearHistory, useResumeStore, useTemporalStore } from "../state/resume";
 import { useHydrated } from "../state/hydration";
 import { Preview } from "../components/Preview";
 import { Button } from "../components/ui";
@@ -12,6 +12,8 @@ import { SkillsSection } from "../components/sections/SkillsSection";
 import { downloadPdf } from "../export/pdf";
 import { downloadDocx } from "../export/docx";
 import { fixtureResume } from "../resume/fixture";
+import { ImportDialog } from "../components/ImportDialog";
+import { IntakeWizard } from "../components/IntakeWizard";
 
 export function Editor() {
   const hydrated = useHydrated();
@@ -26,8 +28,21 @@ export function Editor() {
 
   const [exporting, setExporting] = useState<null | "pdf" | "docx">(null);
   const [exportError, setExportError] = useState<string | null>(null);
+  const [dialog, setDialog] = useState<null | "import" | "wizard">(null);
 
   const problems = resumeReadiness(resume);
+  const blank = isBlankResume(resume);
+
+  /**
+   * Import and generate replace the entire document, so undo history from before
+   * the replacement is dropped: the first undo should return to the imported
+   * resume, not to a document the user was never shown.
+   */
+  function adopt(next: Resume) {
+    replace(next);
+    clearHistory();
+    setDialog(null);
+  }
 
   async function runExport(kind: "pdf" | "docx") {
     setExporting(kind);
@@ -72,6 +87,11 @@ export function Editor() {
           </Button>
         </div>
 
+        <div className="app-header__group">
+          <Button onClick={() => setDialog("import")}>Import resume</Button>
+          <Button onClick={() => setDialog("wizard")}>Guided questions</Button>
+        </div>
+
         <div className="app-header__spacer" />
 
         <div className="app-header__group">
@@ -107,6 +127,22 @@ export function Editor() {
 
       <main className="editor">
         <div className="editor__form">
+          {blank ? (
+            <div className="starter">
+              <h2 className="starter__title">Start from something</h2>
+              <p className="starter__prose">
+                Import a resume you already have, or answer a few questions and have one
+                written for you. You can also just fill the form in yourself.
+              </p>
+              <div className="starter__actions">
+                <Button variant="primary" onClick={() => setDialog("wizard")}>
+                  Answer a few questions
+                </Button>
+                <Button onClick={() => setDialog("import")}>Import an existing resume</Button>
+              </div>
+            </div>
+          ) : null}
+
           <BasicsSection />
           <ExperienceSection />
           <ProjectsSection />
@@ -138,6 +174,22 @@ export function Editor() {
           <Preview resume={resume} />
         </aside>
       </main>
+
+      {dialog === "import" ? (
+        <ImportDialog
+          hasExistingContent={!blank}
+          onImport={adopt}
+          onClose={() => setDialog(null)}
+        />
+      ) : null}
+
+      {dialog === "wizard" ? (
+        <IntakeWizard
+          hasExistingContent={!blank}
+          onGenerated={adopt}
+          onClose={() => setDialog(null)}
+        />
+      ) : null}
     </div>
   );
 }

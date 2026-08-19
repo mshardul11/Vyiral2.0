@@ -1,9 +1,16 @@
 import { zodOutputFormat } from "@anthropic-ai/sdk/helpers/zod";
 import type { MessageCreateParams } from "@anthropic-ai/sdk/resources/messages";
-import { RewriteResultSchema, type RewriteRequest, type RewriteResult } from "@resume/shared";
+import {
+  ResumeSchema,
+  RewriteResultSchema,
+  type IntakeAnswers,
+  type Resume,
+  type RewriteRequest,
+  type RewriteResult,
+} from "@resume/shared";
 import { MODEL } from "../config.js";
 import { anthropic } from "./client.js";
-import { CRAFT, REWRITE } from "./prompts.js";
+import { CRAFT, GENERATE, PARSE, REWRITE } from "./prompts.js";
 
 /**
  * Every model call in the app.
@@ -135,5 +142,120 @@ export async function rewriteSection(
   const parsed = response.parsed_output;
   if (!parsed) throw new Error("The model returned no usable output.");
 
+  return { data: parsed, usage: usageOf(response) };
+}
+
+// --- Guided generate ----------------------------------------------------------
+
+/** Renders intake answers as tagged text so the model can tell the fields apart. */
+function renderIntake(intake: IntakeAnswers): string {
+  const roles = intake.roles
+    .filter((role) => role.company.trim() || role.role.trim() || role.whatYouDid.trim())
+    .map((role, index) =>
+      tag(
+        `role_${index + 1}`,
+        [
+          `Title: ${role.role}`,
+          `Company: ${role.company}`,
+          `Location: ${role.location}`,
+          `Dates: ${role.startDate} to ${role.endDate}`,
+          `In their words: ${role.whatYouDid}`,
+        ].join("\n"),
+      ),
+    )
+    .join("\n\n");
+
+  return [
+    tag(
+      "contact",
+      [
+        `Name: ${intake.name}`,
+        `Email: ${intake.email}`,
+        `Phone: ${intake.phone}`,
+        `Location: ${intake.location}`,
+        `Links:\n${intake.links}`,
+      ].join("\n"),
+    ),
+    tag(
+      "goal",
+      [`Target role: ${intake.targetRole}`, `Years of experience: ${intake.yearsExperience}`].join(
+        "\n",
+      ),
+    ),
+    roles ? tag("roles", roles) : "",
+    intake.education.trim() ? tag("education", intake.education) : "",
+    intake.skills.trim() ? tag("skills", intake.skills) : "",
+    intake.projects.trim() ? tag("projects", intake.projects) : "",
+  ]
+    .filter(Boolean)
+    .join("\n\n");
+}
+
+export async function generateResume(intake: IntakeAnswers): Promise<Completed<Resume>> {
+  const response = await anthropic().messages.parse({
+    model: MODEL,
+    max_tokens: 16000,
+    system: system(GENERATE),
+    output_config: {
+      format: zodOutputFormat(ResumeSchema),
+      // Turning rough answers into resume prose is real writing, but it is bounded
+      // work — the facts are all supplied.
+      effort: "medium" satisfies Effort,
+    },
+    messages: [{ role: "user", content: renderIntake(intake) }],
+  });
+
+  assertUsable(response);
+  const parsed = response.parsed_output;
+  if (!parsed) throw new Error("The model returned no usable output.");
+  return { data: parsed, usage: usageOf(response) };
+}
+
+// --- Import an existing resume ------------------------------------------------
+
+export type UploadSource =
+  /** PDFs go to the model as-is; it reads them natively, so no text extraction. */
+  | { kind: "pdf"; base64: string }
+  /** DOCX has no native path, so the text is extracted before the call. */
+  | { kind: "text"; text: string };
+
+export async function parseResume(source: UploadSource): Promise<Completed<Resume>> {
+  const instruction =
+    "Extract this resume into the structured format. Transcribe; do not rewrite.";
+
+  const content =
+    source.kind === "pdf"
+      ? ([
+          // The document block goes before the text block.
+          //
+          // Citations stay off: they are mutually exclusive with
+          // output_config.format and the request would 400.
+          {
+            type: "document" as const,
+            source: {
+              type: "base64" as const,
+              media_type: "application/pdf" as const,
+              data: source.base64,
+            },
+          },
+          { type: "text" as const, text: instruction },
+        ])
+      : `${instruction}\n\n${tag("resume_text", source.text)}`;
+
+  const response = await anthropic().messages.parse({
+    model: MODEL,
+    max_tokens: 16000,
+    system: system(PARSE),
+    output_config: {
+      format: zodOutputFormat(ResumeSchema),
+      // Mechanical extraction — no judgment to make, and import should feel quick.
+      effort: "low" satisfies Effort,
+    },
+    messages: [{ role: "user", content }],
+  });
+
+  assertUsable(response);
+  const parsed = response.parsed_output;
+  if (!parsed) throw new Error("The model returned no usable output.");
   return { data: parsed, usage: usageOf(response) };
 }

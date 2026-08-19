@@ -1,4 +1,11 @@
-import type { RewriteKind, RewriteRequest, RewriteResult } from "@resume/shared";
+import type {
+  GenerateRequest,
+  IntakeAnswers,
+  Resume,
+  RewriteKind,
+  RewriteRequest,
+  RewriteResult,
+} from "@resume/shared";
 
 /**
  * Calls to our own API.
@@ -67,4 +74,47 @@ export function rewrite(
     instruction: request.instruction ?? "",
   };
   return post<RewriteResult>("/resume/rewrite", body, signal);
+}
+
+export function generateResume(
+  intake: IntakeAnswers,
+  signal?: AbortSignal,
+): Promise<Resume> {
+  const body: GenerateRequest = { intake };
+  return post<Resume>("/resume/generate", body, signal);
+}
+
+/**
+ * Uploads a PDF or DOCX for import. Sent as multipart rather than JSON so the file
+ * is streamed as bytes instead of inflating ~33% as base64 on the way out.
+ */
+export async function parseResumeFile(file: File, signal?: AbortSignal): Promise<Resume> {
+  const form = new FormData();
+  form.append("file", file);
+
+  let response: Response;
+  try {
+    response = await fetch(`${BASE}/api/resume/parse`, {
+      method: "POST",
+      body: form,
+      signal,
+    });
+  } catch (error) {
+    if (error instanceof DOMException && error.name === "AbortError") throw error;
+    throw new ApiCallError("Could not reach the server. Check your connection.", 0);
+  }
+
+  if (!response.ok) {
+    const message = await response
+      .json()
+      .then((body: unknown) =>
+        typeof body === "object" && body !== null && "error" in body
+          ? String((body as { error: unknown }).error)
+          : null,
+      )
+      .catch(() => null);
+    throw new ApiCallError(message ?? "That file could not be imported.", response.status);
+  }
+
+  return (await response.json()) as Resume;
 }

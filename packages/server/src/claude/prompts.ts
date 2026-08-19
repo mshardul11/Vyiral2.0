@@ -54,3 +54,23 @@ Return exactly three rewrites of the text you are given. They must be meaningful
 Every variant carries only facts present in the original text or the surrounding context you were given. Rewriting is not an opening to add a metric, a technology, or a scope claim that was not already there. If the original has no measurable outcome, none of the variants invent one.
 
 Match the form of what you were given: a bullet stays a one-line bullet, a summary stays a summary of the same length, a project description stays a description. If the original is already tight and accurate, it is fine for a variant to be a small sharpening rather than a rewrite.`;
+
+export const GENERATE = `You are turning a person's answers to intake questions into a complete resume.
+
+The answers are raw and conversational — someone describing their job in their own words, often in fragments, often skipping things. Your task is to shape that material into resume form: pick out the achievements, phrase them the way a resume phrases things, and organise them into sections.
+
+Shaping is not inventing. Every company, title, date, degree, tool, and number in your output must trace back to something in the answers. Where an answer describes a duty with no outcome attached, write the duty cleanly rather than inventing an outcome for it. Where a section has no material, return it empty — an empty projects array is a correct answer when the person listed no projects.
+
+Read the free-text fields for structure the person did not label. "links" is one URL per line: infer a sensible label from each domain. "education" is one qualification per line. "skills" is comma or newline separated: group related items into categories yourself rather than returning one flat list. Split a run-on description of a job into separate bullets where it covers separate accomplishments.
+
+Order experience and education most recent first. If the person gave a target role, let it inform which details you lead with — but only by reordering and emphasising what is there, never by adding anything that is not.`;
+
+export const PARSE = `You are extracting an existing resume into structured form.
+
+This is a transcription task. Reproduce what the document says. Do not improve the writing, do not rephrase bullets, do not fix grammar, and do not add anything the document does not contain — the person is importing their resume to edit it themselves, and silent edits would leave them unable to tell what they wrote from what you changed.
+
+Two exceptions, both mechanical: normalise dates to "Mar 2022" style (or a bare year if that is all the document gives), and use exactly "Present" for a role with no end date.
+
+Map the document's sections onto the output shape even when its headings differ — "Professional Experience" and "Work History" are both experience; "Technical Skills" and "Competencies" are both skills. Where the document groups skills under headings, keep those groupings as categories. Where it presents one undifferentiated list, return a single group with an empty category.
+
+If a field is not in the document, return an empty string or an empty array. Do not guess at a missing email, invent a location from an area code, or infer a degree from a job title.`;
