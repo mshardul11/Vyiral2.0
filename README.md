@@ -38,6 +38,17 @@ links all work. Only the AI routes return 503.
 `VITE_` prefix: Vite inlines every `VITE_*` variable into the client bundle, which would
 publish the key to anyone who opens devtools. All model calls go through the server.
 
+## Share links
+
+Publishing writes a JSON file per share under `packages/server/data/shares/` and
+returns a 12-character slug. The link is the only credential — there is no password
+— so the share dialog says exactly that. Shares are deleted after 90 days by a sweep
+that runs when the server starts.
+
+`/r/:slug` is a client-side route, so a production deploy needs the usual SPA
+fallback (serve `index.html` for unmatched paths). The Vite dev server already does
+this.
+
 ## Checking the PDF
 
 ```sh

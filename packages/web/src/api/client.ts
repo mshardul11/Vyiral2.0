@@ -7,6 +7,8 @@ import type {
   RewriteResult,
   TailorRequest,
   TailorResult,
+  ShareCreated,
+  SharedResume,
 } from "@resume/shared";
 
 /**
@@ -128,4 +130,33 @@ export async function parseResumeFile(file: File, signal?: AbortSignal): Promise
   }
 
   return (await response.json()) as Resume;
+}
+
+/** Publishes the resume and returns its slug. Explicit user action only. */
+export function publishShare(resume: Resume, signal?: AbortSignal): Promise<ShareCreated> {
+  return post<ShareCreated>("/share", { resume }, signal);
+}
+
+export async function fetchShare(slug: string, signal?: AbortSignal): Promise<SharedResume> {
+  let response: Response;
+  try {
+    response = await fetch(`${BASE}/api/share/${encodeURIComponent(slug)}`, { signal });
+  } catch (error) {
+    if (error instanceof DOMException && error.name === "AbortError") throw error;
+    throw new ApiCallError("Could not reach the server. Check your connection.", 0);
+  }
+
+  if (!response.ok) {
+    const message = await response
+      .json()
+      .then((body: unknown) =>
+        typeof body === "object" && body !== null && "error" in body
+          ? String((body as { error: unknown }).error)
+          : null,
+      )
+      .catch(() => null);
+    throw new ApiCallError(message ?? "That link could not be opened.", response.status);
+  }
+
+  return (await response.json()) as SharedResume;
 }

@@ -783,3 +783,42 @@ body,
   font-size: 12.5px;
   color: var(--muted);
 }
+
+/* ---------- shared (read-only) view ---------- */
+
+.shared__preview {
+  flex: 1;
+  min-height: 0;
+  padding: 20px;
+  max-width: 1000px;
+  width: 100%;
+  margin: 0 auto;
+}
+
+.shared--message {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  height: 100%;
+  padding: 24px;
+  text-align: center;
+}
+
+.shared__title {
+  margin: 0;
+  font-size: 20px;
+}
+
+.shared__prose {
+  margin: 0;
+  color: var(--muted);
+  max-width: 460px;
+}
+
+.shared--message .button {
+  margin-top: 8px;
+  text-decoration: none;
+  display: inline-block;
+}

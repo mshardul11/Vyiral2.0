@@ -4,6 +4,8 @@ import { cors } from "hono/cors";
 import { logger } from "hono/logger";
 import { config } from "./config.js";
 import { resumeRoutes } from "./routes/resume.js";
+import { shareRoutes } from "./routes/share.js";
+import { sweepExpiredShares } from "./store/shares.js";
 
 const app = new Hono();
 
@@ -25,6 +27,7 @@ app.get("/health", (c) =>
 );
 
 app.route("/api/resume", resumeRoutes);
+app.route("/api/share", shareRoutes);
 
 app.notFound((c) => c.json({ error: "Not found" }, 404));
 
@@ -35,6 +38,15 @@ app.onError((err, c) => {
 
 serve({ fetch: app.fetch, port: config.port }, (info) => {
   console.log(`API listening on http://localhost:${info.port}`);
+
+  // Published resumes should not sit on disk forever. Sweeping at startup is
+  // enough for a store this size and needs no scheduler.
+  void sweepExpiredShares()
+    .then((removed) => {
+      if (removed > 0) console.log(`Removed ${removed} expired share(s).`);
+    })
+    .catch((error: unknown) => console.error("Share sweep failed:", error));
+
   if (!config.hasAnthropicApiKey) {
     console.warn(
       "ANTHROPIC_API_KEY is not set — the AI routes will return 503 until it is configured.",

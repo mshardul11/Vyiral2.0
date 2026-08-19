@@ -15,6 +15,7 @@ import { fixtureResume } from "../resume/fixture";
 import { ImportDialog } from "../components/ImportDialog";
 import { IntakeWizard } from "../components/IntakeWizard";
 import { TailorDialog } from "../components/TailorDialog";
+import { ShareDialog } from "../components/ShareDialog";
 
 export function Editor() {
   const hydrated = useHydrated();
@@ -29,7 +30,7 @@ export function Editor() {
 
   const [exporting, setExporting] = useState<null | "pdf" | "docx">(null);
   const [exportError, setExportError] = useState<string | null>(null);
-  const [dialog, setDialog] = useState<null | "import" | "wizard" | "tailor">(null);
+  const [dialog, setDialog] = useState<null | "import" | "wizard" | "tailor" | "share">(null);
 
   const problems = resumeReadiness(resume);
   const blank = isBlankResume(resume);
@@ -99,6 +100,9 @@ export function Editor() {
         <div className="app-header__spacer" />
 
         <div className="app-header__group">
+          <Button onClick={() => setDialog("share")} disabled={blank}>
+            Share link
+          </Button>
           <Button onClick={() => void runExport("docx")} disabled={exporting !== null}>
             {exporting === "docx" ? "Preparing…" : "Download DOCX"}
           </Button>
@@ -193,6 +197,10 @@ export function Editor() {
           onGenerated={adopt}
           onClose={() => setDialog(null)}
         />
+      ) : null}
+
+      {dialog === "share" ? (
+        <ShareDialog resume={resume} onClose={() => setDialog(null)} />
       ) : null}
 
       {dialog === "tailor" ? (
