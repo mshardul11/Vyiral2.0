@@ -1,9 +1,11 @@
 import { Button, Field, IconButton, Row, Section, TextArea, TextInput } from "../ui";
+import { RewriteButton } from "../RewriteButton";
 import { moveItem, useResumeStore } from "../../state/resume";
 
 export function BasicsSection() {
   const basics = useResumeStore((state) => state.resume.basics);
   const summary = useResumeStore((state) => state.resume.summary);
+  const experience = useResumeStore((state) => state.resume.experience);
   const edit = useResumeStore((state) => state.edit);
 
   return (
@@ -116,13 +118,38 @@ export function BasicsSection() {
         title="Summary"
         description="Two or three sentences on what you do and what you're known for."
       >
-        <TextArea
-          value={summary}
-          rows={5}
-          placeholder="Backend engineer with eight years building payment systems…"
-          onChange={(value) => edit((resume) => void (resume.summary = value))}
-        />
+        <div className="field__with-action">
+          <TextArea
+            value={summary}
+            rows={5}
+            placeholder="Backend engineer with eight years building payment systems…"
+            onChange={(value) => edit((resume) => void (resume.summary = value))}
+          />
+          <RewriteButton
+            text={summary}
+            kind="summary"
+            context={summaryContext(basics.headline, experience)}
+            onApply={(next) => edit((resume) => void (resume.summary = next))}
+          />
+        </div>
       </Section>
     </>
   );
+}
+
+/**
+ * The summary is meant to sit on top of the rest of the resume, so the rewrite is
+ * given the headline and the role history rather than just the existing prose.
+ */
+function summaryContext(
+  headline: string,
+  experience: { role: string; company: string; startDate: string; endDate: string }[],
+): string {
+  const roles = experience
+    .slice(0, 4)
+    .map((role) => `- ${role.role} at ${role.company} (${role.startDate} to ${role.endDate})`)
+    .join("\n");
+  return [headline && `Headline: ${headline}`, roles && `Roles:\n${roles}`]
+    .filter(Boolean)
+    .join("\n\n");
 }

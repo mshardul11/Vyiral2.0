@@ -29,15 +29,16 @@ const styles = StyleSheet.create({
     fontFamily: theme.fontFamily,
     fontSize: theme.size.body,
     color: theme.color.ink,
-    lineHeight: theme.lineHeight,
   },
 
   name: {
+    lineHeight: theme.lineHeight.display,
     fontFamily: theme.fontFamilyBold,
     fontSize: theme.size.name,
     letterSpacing: -0.4,
   },
   headline: {
+    lineHeight: theme.lineHeight.heading,
     fontSize: theme.size.headline,
     color: theme.color.muted,
     marginTop: 2,
@@ -48,11 +49,13 @@ const styles = StyleSheet.create({
     marginTop: 6,
   },
   contactItem: {
+    lineHeight: theme.lineHeight.heading,
     fontSize: theme.size.meta,
     color: theme.color.muted,
     marginRight: 8,
   },
   contactSeparator: {
+    lineHeight: theme.lineHeight.heading,
     fontSize: theme.size.meta,
     color: theme.color.faint,
     marginRight: 8,
@@ -66,6 +69,7 @@ const styles = StyleSheet.create({
     marginTop: theme.spacing.section,
   },
   sectionHeading: {
+    lineHeight: theme.lineHeight.heading,
     fontFamily: theme.fontFamilyBold,
     fontSize: theme.size.sectionHeading,
     letterSpacing: 1.1,
@@ -86,17 +90,20 @@ const styles = StyleSheet.create({
     alignItems: "flex-start",
   },
   entryTitle: {
+    lineHeight: theme.lineHeight.body,
     fontFamily: theme.fontFamilyBold,
     fontSize: theme.size.body,
     flexShrink: 1,
     paddingRight: 12,
   },
   entryDates: {
+    lineHeight: theme.lineHeight.body,
     fontSize: theme.size.meta,
     color: theme.color.muted,
     flexShrink: 0,
   },
   entrySubtitle: {
+    lineHeight: theme.lineHeight.body,
     fontSize: theme.size.meta,
     color: theme.color.muted,
     marginTop: 1,
@@ -107,10 +114,12 @@ const styles = StyleSheet.create({
     marginTop: 3,
   },
   bulletGlyph: {
+    lineHeight: theme.lineHeight.body,
     width: 10,
     color: theme.color.muted,
   },
   bulletText: {
+    lineHeight: theme.lineHeight.body,
     flex: 1,
   },
 
@@ -119,15 +128,18 @@ const styles = StyleSheet.create({
     marginBottom: 3,
   },
   skillCategory: {
+    lineHeight: theme.lineHeight.body,
     fontFamily: theme.fontFamilyBold,
     width: 110,
     flexShrink: 0,
   },
   skillItems: {
+    lineHeight: theme.lineHeight.body,
     flex: 1,
   },
 
   summary: {
+    lineHeight: theme.lineHeight.prose,
     marginTop: 2,
   },
 });

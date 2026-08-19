@@ -3,6 +3,7 @@ import { Hono } from "hono";
 import { cors } from "hono/cors";
 import { logger } from "hono/logger";
 import { config } from "./config.js";
+import { resumeRoutes } from "./routes/resume.js";
 
 const app = new Hono();
 
@@ -22,6 +23,8 @@ app.get("/health", (c) =>
     anthropicConfigured: config.hasAnthropicApiKey,
   }),
 );
+
+app.route("/api/resume", resumeRoutes);
 
 app.notFound((c) => c.json({ error: "Not found" }, 404));
 

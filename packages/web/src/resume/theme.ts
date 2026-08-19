@@ -30,5 +30,26 @@ export const theme = {
     entry: 9,
     line: 2,
   },
-  lineHeight: 1.4,
+  /**
+   * Line heights, applied per text style — never on the page.
+   *
+   * Two react-pdf behaviours, both established with `src/dev/leading-sweep.tsx`
+   * rather than assumed:
+   *
+   * 1. A page-level `lineHeight` does not inherit into nested <Text> the way CSS
+   *    would. Setting it there collapses the blocks and the headline renders on top
+   *    of the name.
+   * 2. An explicit `lineHeight` is not a plain multiple of the font size — react-pdf
+   *    factors in the font's own metrics. Values below ~0.9 make a block shorter
+   *    than its glyphs, so the next element overlaps it.
+   *
+   * 1.0 is the floor that clears every block cleanly while keeping wrapped prose
+   * readable. Re-run the sweep before changing these.
+   */
+  lineHeight: {
+    display: 1,
+    heading: 1,
+    body: 1,
+    prose: 1.1,
+  },
 } as const;

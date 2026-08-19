@@ -1,6 +1,7 @@
 import { emptyExperience } from "@resume/shared";
 import { Button, EmptyHint, Field, ItemCard, Row, Section, TextInput } from "../ui";
 import { BulletList } from "../BulletList";
+import { RewriteButton } from "../RewriteButton";
 import { moveItem, useResumeStore } from "../../state/resume";
 
 export function ExperienceSection() {
@@ -122,9 +123,39 @@ export function ExperienceSection() {
                 if (target) moveItem(target.highlights, bulletIndex, to);
               })
             }
+            renderAction={(bulletIndex, value) => (
+              <RewriteButton
+                text={value}
+                kind="highlight"
+                context={roleContext(role)}
+                onApply={(next) =>
+                  edit((resume) => {
+                    const target = resume.experience[index];
+                    if (target) target.highlights[bulletIndex] = next;
+                  })
+                }
+              />
+            )}
           />
         </ItemCard>
       ))}
     </Section>
   );
+}
+
+/** Surrounding facts sent with a rewrite so variants stay grounded in the real role. */
+function roleContext(role: {
+  role: string;
+  company: string;
+  location: string;
+  startDate: string;
+  endDate: string;
+}): string {
+  const parts = [
+    role.role && `Role: ${role.role}`,
+    role.company && `Company: ${role.company}`,
+    role.location && `Location: ${role.location}`,
+    (role.startDate || role.endDate) && `Dates: ${role.startDate} to ${role.endDate}`,
+  ].filter(Boolean);
+  return parts.join("\n");
 }

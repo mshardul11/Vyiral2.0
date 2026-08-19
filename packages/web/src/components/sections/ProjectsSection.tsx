@@ -1,6 +1,7 @@
 import { emptyProject } from "@resume/shared";
 import { Button, EmptyHint, Field, ItemCard, Row, Section, TextArea, TextInput } from "../ui";
 import { BulletList } from "../BulletList";
+import { RewriteButton } from "../RewriteButton";
 import { moveItem, useResumeStore } from "../../state/resume";
 
 export function ProjectsSection() {
@@ -58,17 +59,30 @@ export function ProjectsSection() {
           </Row>
 
           <Field label="Description">
-            <TextArea
-              value={project.description}
-              rows={2}
-              placeholder="Open-source formatter for double-entry ledger files."
-              onChange={(value) =>
-                edit((resume) => {
-                  const target = resume.projects[index];
-                  if (target) target.description = value;
-                })
-              }
-            />
+            <div className="field__with-action">
+              <TextArea
+                value={project.description}
+                rows={2}
+                placeholder="Open-source formatter for double-entry ledger files."
+                onChange={(value) =>
+                  edit((resume) => {
+                    const target = resume.projects[index];
+                    if (target) target.description = value;
+                  })
+                }
+              />
+              <RewriteButton
+                text={project.description}
+                kind="project-description"
+                context={projectContext(project)}
+                onApply={(next) =>
+                  edit((resume) => {
+                    const target = resume.projects[index];
+                    if (target) target.description = next;
+                  })
+                }
+              />
+            </div>
           </Field>
 
           <BulletList
@@ -97,9 +111,32 @@ export function ProjectsSection() {
                 if (target) moveItem(target.highlights, bulletIndex, to);
               })
             }
+            renderAction={(bulletIndex, value) => (
+              <RewriteButton
+                text={value}
+                kind="highlight"
+                context={projectContext(project)}
+                onApply={(next) =>
+                  edit((resume) => {
+                    const target = resume.projects[index];
+                    if (target) target.highlights[bulletIndex] = next;
+                  })
+                }
+              />
+            )}
           />
         </ItemCard>
       ))}
     </Section>
   );
+}
+
+/** Surrounding facts sent with a rewrite so variants stay grounded in the real project. */
+function projectContext(project: { name: string; description: string; url: string }): string {
+  const parts = [
+    project.name && `Project: ${project.name}`,
+    project.description && `Description: ${project.description}`,
+    project.url && `Link: ${project.url}`,
+  ].filter(Boolean);
+  return parts.join("\n");
 }
