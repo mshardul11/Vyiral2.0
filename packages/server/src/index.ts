@@ -6,6 +6,7 @@ import { config } from "./config.js";
 import { resumeRoutes } from "./routes/resume.js";
 import { shareRoutes } from "./routes/share.js";
 import { sweepExpiredShares } from "./store/shares.js";
+import { rateLimit } from "./routes/rateLimit.js";
 
 const app = new Hono();
 
@@ -25,6 +26,11 @@ app.get("/health", (c) =>
     anthropicConfigured: config.hasAnthropicApiKey,
   }),
 );
+
+// The AI routes spend money on every call, so they are limited more tightly than
+// publishing a share, which only writes a small file.
+app.use("/api/resume/*", rateLimit({ perMinute: 20, burst: 8 }));
+app.use("/api/share", rateLimit({ perMinute: 30, burst: 10 }));
 
 app.route("/api/resume", resumeRoutes);
 app.route("/api/share", shareRoutes);

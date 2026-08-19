@@ -1,21 +1,27 @@
-import { useState } from "react";
+import { Suspense, lazy, useState } from "react";
 import { isBlankResume, resumeReadiness, type Resume } from "@resume/shared";
 import { clearHistory, useResumeStore, useTemporalStore } from "../state/resume";
 import { useHydrated } from "../state/hydration";
-import { Preview } from "../components/Preview";
+
 import { Button } from "../components/ui";
 import { BasicsSection } from "../components/sections/BasicsSection";
 import { ExperienceSection } from "../components/sections/ExperienceSection";
 import { ProjectsSection } from "../components/sections/ProjectsSection";
 import { EducationSection } from "../components/sections/EducationSection";
 import { SkillsSection } from "../components/sections/SkillsSection";
-import { downloadPdf } from "../export/pdf";
-import { downloadDocx } from "../export/docx";
 import { fixtureResume } from "../resume/fixture";
 import { ImportDialog } from "../components/ImportDialog";
 import { IntakeWizard } from "../components/IntakeWizard";
 import { TailorDialog } from "../components/TailorDialog";
 import { ShareDialog } from "../components/ShareDialog";
+
+/**
+ * The PDF renderer is the heaviest thing in the bundle, so it loads after the rest
+ * of the page. The form is usable immediately; the preview fills in behind it.
+ */
+const Preview = lazy(() =>
+  import("../components/Preview").then((module) => ({ default: module.Preview })),
+);
 
 export function Editor() {
   const hydrated = useHydrated();
@@ -50,8 +56,15 @@ export function Editor() {
     setExporting(kind);
     setExportError(null);
     try {
-      if (kind === "pdf") await downloadPdf(resume);
-      else await downloadDocx(resume);
+      // Both exporters pull in a large library, so they are loaded on demand
+      // rather than sitting in the entry chunk for a user who never downloads.
+      if (kind === "pdf") {
+        const { downloadPdf } = await import("../export/pdf");
+        await downloadPdf(resume);
+      } else {
+        const { downloadDocx } = await import("../export/docx");
+        await downloadDocx(resume);
+      }
     } catch (error) {
       setExportError(
         error instanceof Error ? error.message : "The file could not be generated.",
@@ -179,7 +192,9 @@ export function Editor() {
         </div>
 
         <aside className="editor__preview">
-          <Preview resume={resume} />
+          <Suspense fallback={<div className="preview preview--loading">Loading preview…</div>}>
+            <Preview resume={resume} />
+          </Suspense>
         </aside>
       </main>
 

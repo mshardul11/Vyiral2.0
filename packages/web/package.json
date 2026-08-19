@@ -10,9 +10,10 @@
     "typecheck": "tsc -b --noEmit",
     "check:pdf": "tsx src/dev/render-check.tsx ./resume-check.pdf && tsx src/dev/pdf-text.ts ./resume-check.pdf",
     "check:docx": "tsx src/dev/docx-check.ts ./resume-check.docx",
-    "check": "npm run check:pdf && npm run check:docx",
+    "check": "npm run check:pdf && npm run check:docx && npm run test",
     "check:leading": "tsx src/dev/leading-sweep.tsx ./leading-sweep.pdf",
-    "test": "vitest run"
+    "test": "vitest run",
+    "check:keys": "tsx src/dev/key-safety.ts ./dist"
   },
   "dependencies": {
     "@react-pdf/renderer": "^4.1.6",

@@ -1,11 +1,17 @@
-import { useEffect, useState } from "react";
+import { Suspense, lazy, useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import type { Resume } from "@resume/shared";
 import { ApiCallError, fetchShare } from "../api/client";
-import { Preview } from "../components/Preview";
+
 import { Button } from "../components/ui";
-import { downloadPdf } from "../export/pdf";
-import { downloadDocx } from "../export/docx";
+
+/**
+ * The PDF renderer is the heaviest thing in the bundle, so it loads after the rest
+ * of the page. The form is usable immediately; the preview fills in behind it.
+ */
+const Preview = lazy(() =>
+  import("../components/Preview").then((module) => ({ default: module.Preview })),
+);
 
 /** Read-only view of a published resume, rendered from the same PDF template. */
 export function SharedResumeView() {
@@ -34,8 +40,13 @@ export function SharedResumeView() {
     if (!resume) return;
     setExporting(kind);
     try {
-      if (kind === "pdf") await downloadPdf(resume);
-      else await downloadDocx(resume);
+      if (kind === "pdf") {
+        const { downloadPdf } = await import("../export/pdf");
+        await downloadPdf(resume);
+      } else {
+        const { downloadDocx } = await import("../export/docx");
+        await downloadDocx(resume);
+      }
     } finally {
       setExporting(null);
     }
@@ -78,7 +89,9 @@ export function SharedResumeView() {
         </div>
       </header>
       <main className="shared__preview">
-        <Preview resume={resume} />
+        <Suspense fallback={<div className="preview preview--loading">Loading preview…</div>}>
+            <Preview resume={resume} />
+          </Suspense>
       </main>
     </div>
   );

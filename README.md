@@ -49,6 +49,19 @@ that runs when the server starts.
 fallback (serve `index.html` for unmatched paths). The Vite dev server already does
 this.
 
+## Limits and checks
+
+The AI routes are rate limited per IP (20/min, burst 8) because every call costs
+money; publishing a share is limited more loosely. The buckets are in-memory, which
+is right for a single process and becomes per-instance behind a load balancer —
+swap in a shared store at that point.
+
+```sh
+npm run check      --workspace=@resume/web   # PDF + DOCX output, unit tests
+npm run check:keys --workspace=@resume/web   # after a build: no secrets in the bundle
+npm run check:ai   --workspace=@resume/server # needs a key and a running server
+```
+
 ## Checking the PDF
 
 ```sh

@@ -822,3 +822,10 @@ body,
   text-decoration: none;
   display: inline-block;
 }
+
+.preview--loading {
+  display: grid;
+  place-items: center;
+  color: var(--faint);
+  font-size: 13px;
+}
