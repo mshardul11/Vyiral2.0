@@ -11,8 +11,8 @@
   "scripts": {
     "dev": "npm run dev --workspace=@resume/server & npm run dev --workspace=@resume/web",
     "build": "npm run build --workspace=@resume/shared && npm run build --workspace=@resume/server && npm run build --workspace=@resume/web",
-    "typecheck": "npm run typecheck --workspaces --if-present",
-    "test": "npm run test --workspaces --if-present"
+    "typecheck": "npm run build --workspace=@resume/shared && npm run typecheck --workspaces --if-present",
+    "test": "npm run build --workspace=@resume/shared && npm run test --workspaces --if-present"
   },
   "engines": {
     "node": ">=20"

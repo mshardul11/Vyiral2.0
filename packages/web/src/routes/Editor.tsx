@@ -14,6 +14,8 @@ import { ImportDialog } from "../components/ImportDialog";
 import { IntakeWizard } from "../components/IntakeWizard";
 import { TailorDialog } from "../components/TailorDialog";
 import { ShareDialog } from "../components/ShareDialog";
+import { Link, Navigate } from "react-router-dom";
+import { useAuth } from "../state/auth";
 
 /**
  * The PDF renderer is the heaviest thing in the bundle, so it loads after the rest
@@ -24,6 +26,7 @@ const Preview = lazy(() =>
 );
 
 export function Editor() {
+  const { user, loading: authLoading } = useAuth();
   const hydrated = useHydrated();
   const resume = useResumeStore((state) => state.resume);
   const replace = useResumeStore((state) => state.replace);
@@ -74,14 +77,15 @@ export function Editor() {
     }
   }
 
-  if (!hydrated) {
+  if (!hydrated || authLoading) {
     return <div className="loading-screen">Loading your resume…</div>;
   }
+  if (!user) return <Navigate to="/auth" replace />;
 
   return (
     <div className="app-shell">
       <header className="app-header">
-        <strong className="app-header__brand">Resume Builder</strong>
+        <Link to="/" className="app-header__brand"><span>V</span> VYIRAL <small>STUDIO</small></Link>
 
         <div className="app-header__group">
           <Button
@@ -92,6 +96,7 @@ export function Editor() {
           >
             ↶ Undo
           </Button>
+          <Link className="profile-chip" title={`${user.name} — view profile`} to="/profile"><span>{user.name.slice(0, 1).toUpperCase()}</span><span><b>{user.name}</b><small>{user.title || "My profile"}</small></span><i>↗</i></Link>
           <Button
             variant="ghost"
             onClick={() => redo()}

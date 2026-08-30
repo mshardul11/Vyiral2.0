@@ -107,6 +107,34 @@ export const SharedResumeSchema = z.object({
 });
 export type SharedResume = z.infer<typeof SharedResumeSchema>;
 
+// --- Accounts -----------------------------------------------------------------
+
+export const UserSchema = z.object({
+  id: z.string(),
+  name: z.string(),
+  email: z.string(),
+  title: z.string(),
+  createdAt: z.string(),
+});
+export type User = z.infer<typeof UserSchema>;
+
+export const RegisterRequestSchema = z.object({
+  name: z.string().trim().min(2).max(80),
+  email: z.string().trim().toLowerCase().email().max(254),
+  password: z.string().min(10).max(128),
+});
+export const LoginRequestSchema = z.object({
+  email: z.string().trim().toLowerCase().email().max(254),
+  password: z.string().min(1).max(128),
+});
+export const UpdateProfileRequestSchema = z.object({
+  name: z.string().trim().min(2).max(80),
+  title: z.string().trim().max(100),
+});
+export type RegisterRequest = z.infer<typeof RegisterRequestSchema>;
+export type LoginRequest = z.infer<typeof LoginRequestSchema>;
+export type UpdateProfileRequest = z.infer<typeof UpdateProfileRequestSchema>;
+
 // --- Errors -------------------------------------------------------------------
 
 export const ApiErrorSchema = z.object({

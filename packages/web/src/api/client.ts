@@ -9,6 +9,7 @@ import type {
   TailorResult,
   ShareCreated,
   SharedResume,
+  User,
 } from "@resume/shared";
 
 /**
@@ -40,6 +41,7 @@ async function post<T>(path: string, body: unknown, signal?: AbortSignal): Promi
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(body),
       signal,
+      credentials: "include",
     });
   } catch (error) {
     if (error instanceof DOMException && error.name === "AbortError") throw error;
@@ -61,6 +63,23 @@ async function post<T>(path: string, body: unknown, signal?: AbortSignal): Promi
 
   return (await response.json()) as T;
 }
+
+async function request<T>(path: string, init: RequestInit = {}): Promise<T> {
+  const response = await fetch(`${BASE}/api${path}`, { ...init, credentials: "include", headers: { "Content-Type": "application/json", ...init.headers } });
+  if (!response.ok) {
+    const body = await response.json().catch(() => ({})) as { error?: string };
+    throw new ApiCallError(body.error ?? "Something went wrong. Try again.", response.status);
+  }
+  return response.json() as Promise<T>;
+}
+
+export const account = {
+  me: () => request<{ user: User }>("/auth/me"),
+  login: (email: string, password: string) => post<{ user: User }>("/auth/login", { email, password }),
+  register: (name: string, email: string, password: string) => post<{ user: User }>("/auth/register", { name, email, password }),
+  update: (name: string, title: string) => request<{ user: User }>("/auth/me", { method: "PATCH", body: JSON.stringify({ name, title }) }),
+  logout: () => post<{ ok: true }>("/auth/logout", {}),
+};
 
 export function rewrite(
   request: {
