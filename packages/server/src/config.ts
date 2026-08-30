@@ -34,6 +34,12 @@ export const config = {
     return required("ANTHROPIC_API_KEY");
   },
   hasAnthropicApiKey: Boolean(process.env.ANTHROPIC_API_KEY),
+  isProduction: process.env.NODE_ENV === "production",
+  get sessionSecret(): string {
+    if (process.env.SESSION_SECRET) return process.env.SESSION_SECRET;
+    if (process.env.NODE_ENV === "production") return required("SESSION_SECRET");
+    return "local-development-only-change-me";
+  },
 };
 
 /** Single source of truth for the model. Every operation runs on this. */

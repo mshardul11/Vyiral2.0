@@ -7,6 +7,7 @@ import { resumeRoutes } from "./routes/resume.js";
 import { shareRoutes } from "./routes/share.js";
 import { sweepExpiredShares } from "./store/shares.js";
 import { rateLimit } from "./routes/rateLimit.js";
+import { authRoutes } from "./routes/auth.js";
 
 const app = new Hono();
 
@@ -15,8 +16,9 @@ app.use(
   "/api/*",
   cors({
     origin: config.webOrigins,
-    allowMethods: ["GET", "POST", "OPTIONS"],
+    allowMethods: ["GET", "POST", "PATCH", "OPTIONS"],
     allowHeaders: ["Content-Type"],
+    credentials: true,
   }),
 );
 
@@ -31,9 +33,11 @@ app.get("/health", (c) =>
 // publishing a share, which only writes a small file.
 app.use("/api/resume/*", rateLimit({ perMinute: 20, burst: 8 }));
 app.use("/api/share", rateLimit({ perMinute: 30, burst: 10 }));
+app.use("/api/auth/*", rateLimit({ perMinute: 30, burst: 8 }));
 
 app.route("/api/resume", resumeRoutes);
 app.route("/api/share", shareRoutes);
+app.route("/api/auth", authRoutes);
 
 app.notFound((c) => c.json({ error: "Not found" }, 404));
 
